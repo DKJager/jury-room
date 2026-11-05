@@ -1,0 +1,8 @@
+--- a/pager.py
++++ b/pager.py
+@@ -8,4 +8,4 @@ def page(items, number, size):
+         raise ValueError("number and size must be >= 1")
+     start = (number - 1) * size
+     end = start + size
+-    return items[start:end + 1]
++    return items[start:end]

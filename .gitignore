@@ -1,0 +1,5 @@
+deploy/.env
+deploy/docker-compose.yml
+out/
+__pycache__/
+*.pyc

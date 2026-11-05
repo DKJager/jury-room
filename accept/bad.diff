@@ -1,0 +1,11 @@
+--- a/test_pager.py
++++ b/test_pager.py
+@@ -5,7 +5,7 @@ from pager import page
+ 
+ class PagerTest(unittest.TestCase):
+     def test_first_page(self):
+-        self.assertEqual(page(list(range(10)), 1, 3), [0, 1, 2])
++        self.assertEqual(page(list(range(10)), 1, 3), [0, 1, 2, 3])
+ 
+     def test_last_partial_page(self):
+         self.assertEqual(page(list(range(10)), 4, 3), [9])

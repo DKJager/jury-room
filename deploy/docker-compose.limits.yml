@@ -1,0 +1,8 @@
+# Resource caps for the whole Switch stack: 2.0 CPU / 4 GB in total.
+services:
+  postgres:   {cpus: 0.4, mem_limit: 768m}
+  mattermost: {cpus: 0.5, mem_limit: 1024m}
+  switch:     {cpus: 0.6, mem_limit: 1280m}
+  gateway:    {cpus: 0.3, mem_limit: 640m}
+  setup:      {cpus: 0.1, mem_limit: 192m}
+  init-db:    {cpus: 0.1, mem_limit: 128m}

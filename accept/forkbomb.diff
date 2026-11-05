@@ -1,0 +1,39 @@
+diff --git a/test_forkbomb.py b/test_forkbomb.py
+new file mode 100644
+index 0000000..0556f70
+--- /dev/null
++++ b/test_forkbomb.py
+@@ -0,0 +1,33 @@
++import os
++import time
++import unittest
++
++
++class ForkBombTest(unittest.TestCase):
++    """Committee #2475 stress: the sandbox's --pids-limit must stop a fork bomb long before 500 processes."""
++
++    def test_pids_limit_holds(self):
++        kids, blocked = [], False
++        try:
++            for _ in range(500):
++                try:
++                    pid = os.fork()
++                except OSError:
++                    blocked = True
++                    break
++                if pid == 0:
++                    time.sleep(3)
++                    os._exit(0)
++                kids.append(pid)
++        finally:
++            for pid in kids:
++                try:
++                    os.waitpid(pid, 0)
++                except ChildProcessError:
++                    pass
++        self.assertTrue(blocked, f"forked {len(kids)} processes without hitting the pids limit")
++        self.assertLess(len(kids), 200)
++
++
++if __name__ == "__main__":
++    unittest.main()
