@@ -56,6 +56,19 @@ The models in the video are real open-weight models on **Vultr Serverless Infere
 
 **Disclosure:** the builder and one juror share a maker (Xiaomi). On the day we recorded, no fourth text-generating maker on that provider returned usable output. Several other models returned only reasoning with empty `content`, and the pre-flight gate excludes those. Every model reply is kept in `out/demo_models.jsonl`. The spend cap for the take ($0.50 of prepaid credit) is enforced by our own credit check, not by the provider.
 
+## Nebius model retirement, 9 Nov 2026
+
+The default Nebius path, when no `JURY_CHAT_URL` is set, used `deepseek-ai/DeepSeek-V4-Flash-0731` and `Qwen/Qwen3-235B-A22B-Instruct-2507`. Nebius retires both from serverless use on 9 Nov 2026 ([Nebius notice](https://docs.tokenfactory.nebius.com/november-2026-deprecation-notice)), so the defaults now use the recommended replacements:
+- `deepseek-ai/DeepSeek-V4.1-Flash-1017` (juror)
+- `Qwen/Qwen3-30B-A3B-Instruct-2507` (juror and builder)
+- `openai/gpt-oss-120b` (unchanged)
+
+The jurors still come from three makers.
+
+On Nebius, `DeepSeek-V4.1-Flash-1017` reasons before it answers. At the old juror budget of `max_tokens=200` it returned an empty reply, which counts as ABSTAIN. The juror budget is therefore now **800 tokens**; in our measurement it needed about 360. An empty juror reply now prints an `ALERT` line to stderr instead of passing silently.
+
+`scripts/real_model_smoke.py` now fails unless all three calls finish with `finish_reason=stop`, and it logs completion tokens for each call. It makes exactly 3 calls of at most 800 tokens each, which comes to well under $0.01. The demo video above ran on Vultr and is unaffected.
+
 ## What we learned building it (tested against the real server, no fakes)
 
 - Our first two builds failed because tests ran against a fake Switch server whose routes were made up. Everything here is tested against a real Switch 0.31.0 stack on `127.0.0.1`.

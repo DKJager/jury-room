@@ -5,6 +5,7 @@ calls a model, parses the response, and posts a structured verdict.
 """
 import os
 import json
+import sys
 import time
 from typing import Callable, Dict, Any
 import urllib.request
@@ -164,7 +165,7 @@ def nebius_caller(model: str, timeout: float = 60.0) -> Callable[[str], str]:
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0,
-            "max_tokens": 200,
+            "max_tokens": 800,  # #2498: DeepSeek-V4.1-Flash reasons first and returns empty content at 200
         }
 
         req = urllib.request.Request(
@@ -179,7 +180,10 @@ def nebius_caller(model: str, timeout: float = 60.0) -> Callable[[str], str]:
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
-                return data["choices"][0]["message"]["content"]
+                content = data["choices"][0]["message"].get("content") or ""
+                if not content.strip():  # #2498: an empty reply becomes ABSTAIN; say so loudly
+                    print(f"ALERT juror empty reply model={model} finish={data['choices'][0].get('finish_reason')}", file=sys.stderr)
+                return content
         except urllib.error.HTTPError as e:
             raise RuntimeError(f"Nebius API error: {e.code}") from e
 

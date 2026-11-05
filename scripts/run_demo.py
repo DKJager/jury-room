@@ -19,8 +19,8 @@ os.environ.setdefault("JURY_UPSTREAM_EVIDENCE", os.path.join(ROOT, "out", "upstr
 from agents.switch_client import SwitchClient  # noqa: E402
 from agents import builder, foreperson, juror, merge_gate  # noqa: E402
 
-JURORS = {"juror-openai": "openai/gpt-oss-120b", "juror-deepseek": "deepseek-ai/DeepSeek-V4-Flash-0731", "juror-qwen": "Qwen/Qwen3-235B-A22B-Instruct-2507"}
-BUILDER_MODEL = "Qwen/Qwen3-235B-A22B-Instruct-2507"
+JURORS = {"juror-openai": "openai/gpt-oss-120b", "juror-deepseek": "deepseek-ai/DeepSeek-V4.1-Flash-1017", "juror-qwen": "Qwen/Qwen3-30B-A3B-Instruct-2507"}
+BUILDER_MODEL = "Qwen/Qwen3-30B-A3B-Instruct-2507"
 # [#2486] Provider override, Nebius stays the default: JURY_CHAT_URL, JURY_API_KEY,
 # JURY_MODELS="juror-a=model,juror-b=model,juror-c=model", JURY_BUILDER_MODEL.
 if os.environ.get("JURY_MODELS"):
@@ -67,6 +67,8 @@ def chat(model, prompt, max_tokens=700):
         err = f"{type(e).__name__}: {str(e)[:200]}"
     else:
         err = None
+        if not reply.strip():  # #2498: never let an empty juror reply pass silently
+            print(f"ALERT empty model reply model={model}", file=sys.stderr)
     with open(os.path.join(ROOT, "out", "demo_models.jsonl"), "a") as f:  # every model reply is kept for review
         f.write(json.dumps({"ts": time.time(), "model": model, "latency_s": round(time.time() - t, 2), "error": err, "reply": reply[:2000]}) + "\n")
     return reply
@@ -154,7 +156,7 @@ def main():
           threading.Thread(target=lambda: out.__setitem__("tally", foreperson.run_foreperson(cl["foreperson"], room, jn, timeout=a.timeout)), daemon=True),
           threading.Thread(target=lambda: out.__setitem__("gate", merge_gate.run_merge_gate(cl["merge-gate"], room, repo, [a.human], timeout=a.timeout)), daemon=True)]
     for i, (k, m) in enumerate(JURORS.items()):
-        call = (lambda p, _s=stubs[i]: _s) if a.stub else (lambda p, _m=m: chat(_m, p, 200))
+        call = (lambda p, _s=stubs[i]: _s) if a.stub else (lambda p, _m=m: chat(_m, p, 800))
         ts.append(threading.Thread(target=lambda k=k, c=call: out.__setitem__(k, juror.run_juror(cl[k], room, c, timeout=a.timeout)), daemon=True))
     for t in ts:
         t.start()
